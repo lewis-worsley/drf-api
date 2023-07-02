@@ -8,7 +8,7 @@ class LikeSerializer(serializers.ModelSerializer):
     Serializer for the Like model
     The create method handles the unique constraint on 'owner' and 'post'
     """
-    owner = ReadOnlyField(source='owner.username')
+    owner = serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = Like
