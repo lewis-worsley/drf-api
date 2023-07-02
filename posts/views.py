@@ -1,4 +1,5 @@
-from rest_framework import generics, permissions
+from django.db.models import Count
+from rest_framework import generics, permissions, filters
 from drf_api.permissions import IsOwnerOrReadOnly
 from .models import Post
 from .serializers import PostSerializer
@@ -8,10 +9,27 @@ class PostList(generics.ListCreateAPIView):
     """
     List posts or create a post if logged in
     The perform_create method associates the post with the logged in user.
-    """    
+    """
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    queryset = Post.objects.all()
+    queryset = Post.objects.annotate(
+        likes_count = Count('likes', distinct=True),
+        comments_count = Count('comment', distinct=True),
+    ).order_by('-created_at')
+    filter_backends = [
+        filters.OrderingFilter,
+    ]
+
+    ordering_fields = [
+        'likes_count',
+        'comments_count',
+        'likes__created_at'
+    ]
+
+    # Previous process:
+    # serializer_class = PostSerializer
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # queryset = Post.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -23,4 +41,12 @@ class PostDetail(generics.RetrieveUpdateDestroyAPIView):
     """    
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    queryset = Post.objects.all()
+    queryset = Post.objects.annotate(
+        likes_count = Count('likes', distinct=True),
+        comments_count = Count('comment', distinct=True),
+    ).order_by('-created_at')
+
+    # Previous Process:
+    # serializer_class = PostSerializer
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # queryset = Post.objects.all()
